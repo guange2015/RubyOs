@@ -11,11 +11,11 @@ _start:
 		mov		ds, ax
 		sti
 		
-;首先清除屏幕
+;棣栧厛娓呴櫎灞忓箷
 		mov ax,0003h
 		int 10h
 
-;;显示logo 
+;;鏄剧ずlogo 
 		mov		cx, 17
 		mov		ah, 0eh
 		mov		si, Msg
