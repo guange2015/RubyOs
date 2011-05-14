@@ -1,0 +1,1 @@
+d:\Bochs-2.4.6\bochsdbg.exe -q -f bochsrc.txt
