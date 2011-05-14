@@ -3,3 +3,11 @@
 
 实验一：
 通过sysenter和sysexit快速调用来实现系统调用。
+
+
+
+实验环境:
+os Win7+Vmware(centos5.5)
+nasm gcc
+bochs 2.4.6
+
