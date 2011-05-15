@@ -1,1 +1,1 @@
-d:\Bochs-2.4.6\bochsdbg.exe -q -f bochsrc.txt
+d:\Bochs-2.4.6\bochsdbg.exe -q -f d:\workspace1\asm\RubyOs\out\bochsrc.txt

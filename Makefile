@@ -7,11 +7,11 @@ all: kernel boot
 	sudo umount /mnt/floppy
 
 kernel:
-	#nasm loader.asm -o loader.bin
-	nasm -f elf loader.asm -o loader.o
-	gcc34 -c main.c
-	ld -o loader -Ttext 0x100 -N -e main loader.o main.o
-	objcopy -R .note -R .comment -S -O binary loader loader.bin
+	nasm loader.asm -o loader.bin
+#	nasm -f elf loader.asm -o loader.o
+#	gcc34 -c main.c
+#	ld -o loader -Ttext 0x100 -N -e main loader.o main.o
+#	objcopy -R .note -R .comment -S -O binary loader loader.bin
 
 boot:
 	nasm boot.asm -o boot.bin
