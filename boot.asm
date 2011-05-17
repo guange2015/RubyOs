@@ -1,212 +1,223 @@
-;------------------------------------------------------------
-;源程序名称：MeBoot.asm
-;说明：引导系统，查找并加载SYSTEM\LOADER.BIN文件到800:100h
-;------------------------------------------------------------
-MAB_SECTOR equ 07e0h
-MAB_LOADER equ 0800h
-;------------------------------------------------------------
- org 07c00h
- jmp short start  ;偏移0处必须是可执行的x86指令
- nop
-;------------------------------------------------------------
-BS_OEMName: db 'MSWIN4.1' ;OEM字符串
-BPB_BytsPerSec: dw 200h  ;每扇区字节数
-BPB_SecPerClus: db 1  ;每簇扇区数
-BPB_RsvdSecCnt: dw 1  ;保留扇区数
-BPB_NumFATs: db 2  ;FAT表数
-BPB_RootEntCnt: dw 0e0h  ;最大根目录数
-BPB_TotSec16: dw 0b40h  ;逻辑扇区总数16位
-BPB_Media: db 0F0h  ;存储介质
-BPB_FATSz16: dw 9  ;每个FAT表扇区数
-BPB_SecPerTrk: dw 12h  ;每磁道扇区数
-BPB_NumHeads: dw 2  ;磁头数
-BPB_HiddSec: dd 0  ;隐藏扇区数
-BPB_TotSec32: dd 0  ;逻辑扇区总数32位
-BS_DrvNum: db 0  ;驱动器号
-BS_Reserved1: db 0  ;保留
-BS_BootSig: db 29h  ;扩展引导标志
-BS_VolID: dd 0  ;卷序列号
-BS_VolLab: db '           ' ;卷标识符
-BS_FileSysType: db 'FAT12   ' ;文件系统
-     ;0:簇号
-     ;2:扇区
-     ;4:目录
-     ;6:文件大小
-;------------------------------------------------------------
-bLoader  db 'Loader...'
-bLoadPath db 'SYSTEM     '
-bLoadFile db 'LOADER  BIN'
-bError  db 'Error!'
-bOK  db 'OK!'
-;------------------------------------------------------------
-start:
- cli
- mov ax,cs   ;此时CS为0000
- mov ds,ax   ;将DS设为CS相同的段，方便寻址数据
- mov ax,MAB_SECTOR
- mov es,ax   ;将ES设置为绝对位置07E00h处
- sti
-;------------------------------------------------------------
-     ;首先显示Loader...
- mov si,bLoader
- mov cx,9
-_echoloader:    
- lodsb
- mov ah,0eh
- int 10h
- loop _echoloader
-;------------------------------------------------------------
-     ;初始化，准备读取根目录
- xor ax,ax
- mov word [BS_FileSysType+4],ax
-;------------------------------------------------------------
-_getlogic_0:
- call getLogic
- xor bx,bx
- call loadSector
-;------------------------------------------------------------
-     ;准备查找目录或文件
-_checkpath_0:
- mov di,word [BS_FileSysType+4]
- cmp di,200h
- jnc _checkpath_3  ;继续下一扇区
- mov al,byte [es:di]
- or al,0
- jz _error   ;空目录项，不再检测之后的目录项
- cmp al,0E5h
- jz _checkpath_2  ;已删除目录项，跳过
- mov cx,0bh
- or word [BS_FileSysType+0],0
- jnz _checkpath_1
- mov si,bLoadPath  ;比较目录名称
- repz cmpsb
- jnz _checkpath_2  ;名称不相同，转到下一目录项
- test byte [es:di],10h
- jz _error   ;找到的不是目录
- mov word [BS_FileSysType+4],40h
- mov ax,word [es:di+15] ;保存找到的开始簇号
- jmp _getlogic_0  ;已经找到目录，开始查找文件
-_checkpath_1:    ;比较文件名称
- mov si,bLoadFile
- repz cmpsb
- jnz _checkpath_2  ;名称不相同，转到下一目录项
- test byte [es:di],10h
- jnz _error   ;找到的不是文件
- mov ax,word [es:di+17]
- mov word [BS_FileSysType+6],ax
- mov ax,word [es:di+15] ;保存找到的文件大小和开始簇号
- mov word [BS_FileSysType+4],300h
- jmp short _loadfile_0 ;已经正确找到文件
-_checkpath_2:    ;下一个目录项
- add word [BS_FileSysType+4],20h
- jmp short _checkpath_0
-_checkpath_3:    ;下一个扇区内容
- or word [BS_FileSysType+0],0
- jnz _checkpath_4  ;处理的是子目录文件
- mov ax,word [BS_FileSysType+2]
- inc ax
- xor bx,bx
- call loadSector  ;读取根目录下一扇区内容
- jmp _checkpath_0
-_checkpath_4:
- mov ax,word [BS_FileSysType+0]
- call getNextClus
- cmp ax,0fffh
- jz _error   ;是最后一簇
- jmp _getlogic_0
- 
- ;------------------------------------------------------------
-     ;发生错误，显示ERROR!
-_error:
- mov si,bError
- mov cx,6
-_error_0:
- lodsb
- mov ah,0eh
- int 10h
- loop _error_0
- jmp short $
-;------------------------------------------------------------
+org 07c00h
+jmp	short LABEL_START
+nop
+	BS_OEMName	db	'zxcvbnml'
+	BPB_BytsPerSec	dw	512	;;每扇区字节数
+	BPB_SecPerClus  db	1   ;;每簇多少个扇区
+	BPB_RsvdSecCnt	dw	1   ;;boot区占用多少扇区
+	BPB_NumFATs		db  2   ;;多少个fat表
+	BPB_RootEntCnt	dw	224 ;;根目录文件数最大值 
+	BPB_TotSec16	dw	2880	;;逻辑扇区总数
+	BPB_Media		db  0xF0	;;媒体描述符
+	BPM_FATSz16		dw	9		;;每个扇区fat数
+	BPB_SecPerTrk	dw	12h
+	BPB_NumHeads	dw  2
+	BPB_HiddSec		dd 	0
+	BPB_TotSec32	dd  0
+	BS_DrvNum		db	0
+	BS_Reserved1	db	0
+	BS_BootSig		db	29h
+	BS_VolID		dd	0
+	BS_VolLab		db	'MyOs.......'
+	BS_FileSysType	db	'FAT12   '
+	BBB_AAA         dw  18
+LABEL_START:
+	mov	 ax, cs
+	mov  ds, ax
+	mov  ss, ax
+	mov  es, ax
+	mov	 sp, BaseOfStack	
+	
+	xor	 ah, ah
+	xor  dl, dl
+	mov  dl, 1
+	int  13h
 
-;------------------------------------------------------------
-_loadfile_0:
- mov word [BS_FileSysType+0],ax
- mov bx,word [BS_FileSysType+4]
- mov ax,word [BS_FileSysType+0]
- sub ax,2
- add ax,0+1+2*9+224*32/512
- call loadSector  ;读取到相应偏移位置
- add word [BS_FileSysType+4],200h
- mov ax,word [BS_FileSysType+0]
- call getNextClus  ;读取下一簇
- cmp ax,0fffh  ;最后一簇
- jnz _loadfile_0
-;------------------------------------------------------------
-     ;完成，显示OK!
- mov si,bOK
- mov cx,3
-_showok_0:
- lodsb
- mov ah,0eh
- int 10h
- loop _showok_0
- jmp word MAB_LOADER:100h ;远跳转到800[0]:0000处执行指令
-;------------------------------------------------------------
-     ;根据簇号获取根目录或数据区的首扇区
-getLogic:
- mov word [BS_FileSysType+0],ax
- cmp ax,2
- jnc _getlogic_1
- mov ax,0+1+2*9
- ret
-_getlogic_1:
- sub ax,2
- add ax,0+1+2*9+224*32/512
- ret
-;------------------------------------------------------------
-     ;获取下一个簇号
-getNextClus:
- push ax
- mov bx,3
- mul bx
- shr ax,1
- xor dx,dx
- mov bx,200h
- div bx
- inc ax
- push dx   ;簇号偏移量
- xor bx,bx
- call loadSector
- pop bx   ;簇号偏移量
- mov ax,word [es:bx]
- pop bx
- shr bx,1
- jc _getnextclus_0
- and ax,0fffh  ;簇号是双数
- ret
-_getnextclus_0:    ;簇号是单数
- shr ax,4
- ret
-;------------------------------------------------------------
-     ;读取扇区到es:bx(预先保存的物理偏移量)
-loadSector:
- mov word [BS_FileSysType+2],ax
- xor dx,dx
- div word [BPB_SecPerTrk]
- inc dx
- mov cl,dl   ;保存物理扇区
- mov ax,[word BS_FileSysType+2]
- xor dx,dx
- div word [BPB_SecPerTrk]
- xor dx,dx
- div word [BPB_NumHeads]
- mov ch,al   ;保存物理磁道
- mov dh,dl   ;保存物理磁头
- mov dl,byte [BS_DrvNum]
- mov ax,0201h
- int 13h
- jc _error
- ret
+	mov  word [wSectorNo], SectorNoOfRootDirectory
+LABEL_SEARCH_IN_ROOT_DIR_BEGIN:
+	cmp  word [wRootDirSizeForLoop], 0
+	jz	 LABEL_NO_LOADERBIN
+	dec	 word [wRootDirSizeForLoop]
+	mov	 ax, BaseOfLoader
+	mov  es, ax
+	mov  bx, OffsetOfLoader
+	mov  ax, [wSectorNo]
+	mov  cl, 1
+	call ReadSector
+	
+	mov  si, LoderFileName
+	mov  di, OffsetOfLoader
+	mov  dx, 19 ;; 512/32=19
+LABEL_SEARCH_FOR_LOADERBIN:
+	cmp	 dx, 0
+	jz   LABEL_GOTO_NEXT_SECTOR_IN_ROOT_DIR
+	dec  dx
+			
+	mov  cx, 11
+LABEL_CMP_FILENAME:
+	cmp  cx, 0
+	jz	 LABEL_FILENAME_FOUND
+	dec  cx
+	lodsb
+	cmp  al, byte [es:di]
+	jnz  LABEL_DIFFERENT
+	inc  di
+	jmp  LABEL_CMP_FILENAME
+	
+LABEL_DIFFERENT:
+	;;到下一个条目
+	and  di, 0FFE0h
+	add  di, 20h
+	mov  si, LoderFileName
+	jmp  LABEL_SEARCH_FOR_LOADERBIN		
 
- times 510-($-$$) db 0
- dw 0aa55h
+LABEL_GOTO_NEXT_SECTOR_IN_ROOT_DIR:
+	add word [wSectorNo], 1
+	jmp LABEL_SEARCH_IN_ROOT_DIR_BEGIN
+
+LABEL_NO_LOADERBIN:
+	mov  dh, 2
+	call DispStr
+
+LABEL_FILENAME_FOUND:
+	;;获取此条目对应的条目
+	and di, 0FFE0h
+	add di, 1Ah
+	mov ax, word [es:di]	
+	mov bx, OffsetOfLoader
+.loop:
+	push ax
+	add ax, RootDirSectors
+	add ax, 19-2  ;;前面19个扇区，fat条目从2开始
+	mov dx, BaseOfLoader
+	mov es, dx
+	mov cl, 1
+	call ReadSector
+	add bx, 512
+	pop ax
+
+	call GetFatEntry
+	mov ax,cx
+	cmp cx,0FF8h
+	jb  .loop	
+
+	jmp word BaseOfLoader:0x100
+	
+;; 获取下一个fat项
+;; ax 索引号
+;; cx 下一个扇区号,0为最后一个扇区
+GetFatEntry:
+	push bp
+	mov  bp,sp
+	push ax
+	push bx
+	push dx
+	push es
+	
+	;;读取fat1表项 1..9
+	mov bx, BaseOfLoader	
+	sub bx, 200h  ;; 9个扇区需要 4.5k空间, 16*0x100 =4k,这里分配8k,够用了
+	mov es, bx
+	xor bx, bx
+	mov cl, 1
+	push ax
+	mov ax, 1
+.loop:
+	call ReadSector
+	add bx, 512
+	inc ax
+	cmp ax, 9
+	jbe .loop
+
+	pop ax
+	mov bx, 3
+	mul	bx
+	mov bx, 2
+	div bx
+	;; 判断有没有余
+	xor bx, bx
+	add bx, ax
+	mov cx, word[es:bx]
+	cmp dx, 0
+	jz .2
+.1:
+	shr cx,4
+	jmp .3
+.2:
+	and cx, 0FFFh
+.3:
+	pop es
+	pop dx
+	pop bx
+	pop ax
+	pop bp
+	ret
+
+;; ax 要读取的扇区号
+;; cl 读取扇区数目
+;; 读取的内容放在 [es:bx]
+ReadSector:
+	push	bp
+	mov  bp, sp
+	
+	push ax
+	push cx
+	push cx
+	push bx
+	mov  bl, [BPB_SecPerTrk] ;;每磁道扇区数
+	div	 bl
+	inc  ah
+	mov  cl, ah ;;起始扇区号
+	mov  dh, al
+	shr  al, 1
+	mov  ch, al ;; 柱面号
+	and  dh, 1  ;; 磁头号
+	mov  dl, 0  ;; 0表示A盘
+	pop  bx
+	pop  ax
+.GoOnReading:
+	mov	 ah, 2
+	int  13h
+	jc	 .GoOnReading
+	
+	pop  cx
+	pop  ax
+	pop  bp
+	ret	
+	
+DispStr:
+	mov ax, MessageLength
+	mul	dh
+	add ax,BootMessage
+	mov bp,ax
+	mov ax,ds
+	mov es,ax
+	mov cx,MessageLength
+	mov ax,01301h
+	mov bx,000ch
+	mov dl,0
+	int 10h
+	ret
+
+;; var
+BaseOfStack     equ		07c00h
+BaseOfLoader	equ		09000h
+OffsetOfLoader	equ		0100h
+RootDirSectors	equ		14	;;根目录所占扇区数
+SectorNoOfRootDirectory	equ	19	;;root directory扇区号
+
+wRootDirSizeForLoop	dw	RootDirSectors
+wSectorNo		dw		0
+bodd			db		0
+
+LoderFileName	db		"LOADER  BIN"
+;;LoderFileName	db		"FLOWER  TXT"
+
+MessageLength	equ		9
+BootMessage		db		"Booting  "
+Message1		db		"Ready.   "
+Message2		db		"No LOADER"
+
+
+times 510-($-$$) db 0
+dw 0xaa55
