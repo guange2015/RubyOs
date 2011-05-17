@@ -111,6 +111,9 @@ LABEL_FILENAME_FOUND:
 	mov ax,cx
 	cmp cx,0FF8h
 	jb  .loop	
+		
+	sub bx, OffsetOfKernel
+	mov word [ElfSize], bx
 	
 	mov dx, BaseOfKernel
 	mov es, dx
@@ -124,8 +127,11 @@ LABEL_FILENAME_FOUND:
 	push cx
 	mov ebx, dword [es:OffsetOfKernel+eax+Offset_elf_p_offset]
 	mov edx, dword [es:OffsetOfKernel+eax+Offset_elf_p_vaddr]
-	mov ecx, dword [es:OffsetOfKernel+eax+Offset_elf_p_filesize]
 	
+	;;修正原来的错误，这里只读一个.text段，导致.data或.rodata的东西会丢失，为了方便我就直接读整个文件大小吧。
+	;;mov ecx, dword [es:OffsetOfKernel+eax+Offset_elf_p_filesize]
+	mov ecx, dword [ElfSize]
+
 	;; 算出Program Header偏移,入口地址-Header虚拟地址
 	mov eax, dword [EBaseOfKernel]
 	sub eax, edx 
@@ -297,6 +303,7 @@ Message1		db		"Ready.   "
 Message2		db		"No KERNEL"
 
 EBaseOfKernel   dd      0
+ElfSize         dd      0
 
 ;;ELF
 Offset_elf_e_entry     equ     24

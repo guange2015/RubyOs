@@ -2,7 +2,7 @@
 
 int main()
 {
-    setCur(0,0);
+		clean_screen();
 	  char a = 'a';
     print_c(a);
     print_c('\n');

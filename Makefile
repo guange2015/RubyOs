@@ -1,6 +1,7 @@
-CCOMPILE=gcc
+CCOMPILE=cc
 ASM_COMPILE=nasm
-CFLAGS=-nostdlib -nostdinc -fno-builtin -Wall -fstrength-reduce -fomit-frame-pointer -finline-functions -fno-align-functions -falign-jumps=1
+##CFLAGS=-nostdlib -nostdinc -fno-builtin -Wall -fstrength-reduce -fomit-frame-pointer -finline-functions -fno-align-functions -falign-jumps=1  -fno-stack-protector
+CFLAGS=-nostdlib -nostdinc -fno-builtin -fno-stack-protector
 
 all: kernel boot
 	dd if=boot.bin of=out/a.img bs=512 count=1 conv=notrunc
@@ -13,9 +14,10 @@ all: kernel boot
 kernel:
 	${ASM_COMPILE} loader.asm -o LOADER.BIN
 #	${ASM_COMPILE} kernel.asm -o KERNEL.BIN
-	${CCOMPILE} ${CFLAGS} -c test.c	
-	${CCOMPILE} ${CFLAGS} -c kprintf.c
-	ld -Ttext 0x30400 -s test.o kprintf.o -e main -o KERNEL.BIN
+	${CCOMPILE}  ${CFLAGS} -c test.c	
+	${CCOMPILE}  ${CFLAGS} -c kprintf.c
+	${CCOMPILE}  ${CFLAGS} -c monitor.c
+	ld -Ttext 0x30400 -s test.o kprintf.o monitor.o -e main -o KERNEL.BIN
 #	nasm -f elf loader.asm -o loader.o
 #	gcc34 -c main.c
 #	ld -o loader -Ttext 0x100 -N -e main loader.o main.o
@@ -23,8 +25,11 @@ kernel:
 
 boot:
 	${ASM_COMPILE} boot.asm -o boot.bin
+	
 dis:
-	ndisasm -o 32 KERNEL.BIN
+#	ndisasm -o 32 KERNEL.BIN
+	objdump -D KERNEL.BIN
+	
 
 clean:
-	rm *.bin *.o loader
+	rm *.bin *.o *.BIN

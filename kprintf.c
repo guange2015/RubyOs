@@ -1,15 +1,14 @@
 #include "kprintf.h"
-extern void DisplayStr(char,short );
+#include "monitor.h"
+
 void print_c(char);
 void kprint(const char*);
 void setCur(const short x, const short y);
-void
-kprintf(const char *fmt, ...);
+void kprintf(const char *fmt, ...);
+void clean_screen();
 
 static char buf[1024] = {-1};       // 注意没有锁保护，引用该变量的函数不可重入！
 static int ptr = -1;
-static short cur_x = 0;
-static short cur_y = 0;
 
 
 #define args_list char *            // 这个宏用例转换栈空间为字符串指针
@@ -50,48 +49,17 @@ parse_hex(unsigned int value) {
     }
 }                                    
 
-
-void setCur(const short x, const short y)
-{
-    cur_x = x;
-    cur_y = y;
-}
-
 void kprint(const char* s)
 {
   while(*s!=0){
-    print_c(*s);
+    monitor_put(*s);
     s++;
   }
 }
 
 void print_c(char c)
 {
-  int i = 0;
-  switch(c){
-  case '\n':
-    for(i = 80 - cur_y;i>=0;--i){
-      DisplayStr(' ',(80*cur_x+cur_y)*2);
-      cur_y++;
-    }    
-    break;
-  case '\t':
-    for(i = 4; i>0; --i){
-      DisplayStr(' ',(80*cur_x+cur_y)*2);
-      cur_y++;
-    }
-    break;
-  default:
-      DisplayStr(c,(80*cur_x+cur_y)*2);
-    break;
-  }
-  
-  cur_y++;
-
-  if(cur_y >= 80){
-    cur_x++;
-    cur_y=0;
-  }
+  monitor_put(c);
 }
 
 
@@ -154,12 +122,7 @@ kprintf(const char *fmt, ...) {
 
 }
 
-void DisplayStr(char c, short pos)
-{
-	__asm__("movb %1, %%al\n\t"
-			"movb $0x0F, %%ah\n\t"
-			"movw %0, %%bx\n\t"
-			"movw %%ax, %%gs:(%%bx)"
-			 ::"r" (pos),"r" (c));
-	return;
+void clean_screen(){
+	monitor_clear();
 }
+
