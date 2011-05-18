@@ -2,8 +2,8 @@
 
 int main()
 {
-		clean_screen();
-	  char a = 'a';
+	clean_screen();
+	char a = 'a';
     print_c(a);
     print_c('\n');
     print_c('\n');
