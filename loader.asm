@@ -167,8 +167,9 @@ LABEL_FILENAME_FOUND:
   mov eax, SelectorFlatRW
   mov ss, eax
   mov ds, eax
+  mov edx, 0x7c00
   mov ebp,edx
-  sub ebp,0x100
+  ;;sub ebp,0x100
   mov esp,ebp
 
 	mov eax, SelectorVideo

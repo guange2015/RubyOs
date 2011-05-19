@@ -1,4 +1,5 @@
 #include "kprintf.h"
+#include "desc_idt.h"
 
 int main()
 {
@@ -14,6 +15,12 @@ int main()
     const char* s = "123456";
     
     kprintf("x = %d, s = %s\n",x,s);
+
+    init_idt();
+
+    int i = 10;
+    int j = 0;
+    int x1 = i / j;
 	while(1){
 
 	}

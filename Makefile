@@ -17,7 +17,9 @@ kernel:
 	${CCOMPILE}  ${CFLAGS} -c test.c	
 	${CCOMPILE}  ${CFLAGS} -c kprintf.c
 	${CCOMPILE}  ${CFLAGS} -c monitor.c
-	ld -Ttext 0x30400 -s test.o kprintf.o monitor.o -e main -o KERNEL.BIN
+	${CCOMPILE}  ${CFLAGS} -c desc_idt.c
+	${ASM_COMPILE} -felf isr.asm
+	ld -Ttext 0x30400  -s test.o kprintf.o monitor.o desc_idt.o isr.o -e main -o KERNEL.BIN -Map kernel.map
 #	nasm -f elf loader.asm -o loader.o
 #	gcc34 -c main.c
 #	ld -o loader -Ttext 0x100 -N -e main loader.o main.o
