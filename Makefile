@@ -1,7 +1,9 @@
-CCOMPILE=cc
+CCOMPILE=gcc34
 ASM_COMPILE=nasm
 ##CFLAGS=-nostdlib -nostdinc -fno-builtin -Wall -fstrength-reduce -fomit-frame-pointer -finline-functions -fno-align-functions -falign-jumps=1  -fno-stack-protector
-CFLAGS=-nostdlib -nostdinc -fno-builtin -fno-stack-protector
+#CFLAGS=-nostdlib -nostdinc -fno-builtin -fno-stack-protector
+CFLAGS=-nostdlib -nostdinc -fno-builtin
+LINKFLAGS = -Tlink.lds
 
 all: kernel boot
 	dd if=boot.bin of=out/a.img bs=512 count=1 conv=notrunc
@@ -19,7 +21,7 @@ kernel:
 	${CCOMPILE}  ${CFLAGS} -c monitor.c
 	${CCOMPILE}  ${CFLAGS} -c desc_idt.c
 	${ASM_COMPILE} -felf isr.asm
-	ld -Ttext 0x30400  -s test.o kprintf.o monitor.o desc_idt.o isr.o -e main -o KERNEL.BIN -Map kernel.map
+	ld ${LINKFLAGS}  -s test.o kprintf.o monitor.o desc_idt.o isr.o -e main -o KERNEL.BIN -Map kernel.map
 #	nasm -f elf loader.asm -o loader.o
 #	gcc34 -c main.c
 #	ld -o loader -Ttext 0x100 -N -e main loader.o main.o

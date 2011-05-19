@@ -20,7 +20,8 @@ int main()
 
     int i = 10;
     int j = 0;
-    int x1 = i / j;
+//    int x1 = i / j;
+	__asm__("int $3");
 	while(1){
 
 	}

@@ -302,7 +302,7 @@ vga: extension=vbe
 #floppya: 1_44=a:, status=inserted
 #floppya: 1_44=a.img, status=inserted, write_protected=1
 #floppya: 1_44=/dev/rfd0a, status=inserted
-floppya: 1_44=d:\workspace1\asm\RubyOs\out\a.img, status=inserted
+floppya: 1_44=e:\workspace\asm\RubyOs\out\a.img, status=inserted
 #=======================================================================
 # FLOPPYB:
 # See FLOPPYA above for syntax

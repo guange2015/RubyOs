@@ -37,6 +37,7 @@ void init_idt()
 	u16int i = 0;
 	for( i = 0; i < IDT_NUM; ++i){
 		if(i < 0x10){
+			kprintf("%d ==> %x\n",i, fun_isr[i]);
 			set_idt(&(idt[i]),(u32int)(fun_isr[i]), 0x8, 0x8e);	
 		} else {
 			set_idt(&(idt[i]),(u32int)isr_default,0x8, 0x8e);
