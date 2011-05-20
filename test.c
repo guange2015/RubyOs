@@ -1,5 +1,6 @@
 #include "kprintf.h"
 #include "desc_idt.h"
+#include "msr.h"
 
 int main()
 {
@@ -21,7 +22,9 @@ int main()
     int i = 10;
     int j = 0;
 //    int x1 = i / j;
-	__asm__("int $3");
+	//__asm__("sysenter");
+    init_msr();
+    test_msr();
 	while(1){
 
 	}

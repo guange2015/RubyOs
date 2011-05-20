@@ -6,10 +6,12 @@ jmp	 LABEL_START
 
 [SECTION .gdt]
 ; GDT
-;;                              ¶Î»ùÖ·         ¶Î½çÏŞ          ¶ÎÊôĞÔ
-LABLE_GDT:          Descriptor       0,            0,          0
-LABLE_DESC_FLAT_C:	Descriptor		0,			0fffffh,		   DA_CR|DA_32|DA_LIMIT_4K
-LABLE_DESC_FLAT_RW:	Descriptor		0,			0fffffh,		   DA_DRW|DA_LIMIT_4K
+;;                              æ®µåŸºå€         æ®µç•Œé™          æ®µå±æ€§
+LABLE_GDT:          Descriptor      0,            0,           0
+LABLE_DESC_FLAT_C:	Descriptor		0,			0fffffh,	   DA_CR|DA_32|DA_LIMIT_4K
+LABLE_DESC_FLAT_RW:	Descriptor		0,			0fffffh,	   DA_DRW|DA_LIMIT_4K
+LABLE_DESC_USER_C:	Descriptor		0,			0fffffh,	   DA_CR|DA_32|DA_LIMIT_4K|DA_DPL3
+LABLE_DESC_USER_RW:	Descriptor		0,			0fffffh,	   DA_DRW|DA_LIMIT_4K|DA_DPL3
 LABLE_DESC_VIDEO:   Descriptor   0B8000h,       0FFFFh,        DA_DRW|DA_DPL3
 
 GdtLen     equ   $ - LABLE_GDT
@@ -74,7 +76,7 @@ LABEL_CMP_FILENAME:
 	jmp  LABEL_CMP_FILENAME
 	
 LABEL_DIFFERENT:
-	;;µ½ÏÂÒ»¸öÌõÄ¿
+	;;åˆ°ä¸‹ä¸€ä¸ªæ¡ç›®
 	and  di, 0FFE0h
 	add  di, 20h
 	mov  si, LoderFileName
@@ -91,7 +93,7 @@ LABEL_NO_LOADERBIN:
 	jmp $
 
 LABEL_FILENAME_FOUND:
-	;;»ñÈ¡´ËÌõÄ¿¶ÔÓ¦µÄÌõÄ¿
+	;;è·å–æ­¤æ¡ç›®å¯¹åº”çš„æ¡ç›®
 	and di, 0FFE0h
 	add di, 1Ah
 	mov ax, word [es:di]	
@@ -99,7 +101,7 @@ LABEL_FILENAME_FOUND:
 .loop:
 	push ax
 	add ax, RootDirSectors
-	add ax, 19-2  ;;Ç°Ãæ19¸öÉÈÇø£¬fatÌõÄ¿´Ó2¿ªÊ¼
+	add ax, 19-2  ;;å‰é¢19ä¸ªæ‰‡åŒºï¼Œfatæ¡ç›®ä»2å¼€å§‹
 	mov dx, BaseOfKernel
 	mov es, dx
 	mov cl, 1
@@ -128,11 +130,11 @@ LABEL_FILENAME_FOUND:
 	mov ebx, dword [es:OffsetOfKernel+eax+Offset_elf_p_offset]
 	mov edx, dword [es:OffsetOfKernel+eax+Offset_elf_p_vaddr]
 	
-	;;ĞŞÕıÔ­À´µÄ´íÎó£¬ÕâÀïÖ»¶ÁÒ»¸ö.text¶Î£¬µ¼ÖÂ.data»ò.rodataµÄ¶«Î÷»á¶ªÊ§£¬ÎªÁË·½±ãÎÒ¾ÍÖ±½Ó¶ÁÕû¸öÎÄ¼ş´óĞ¡°É¡£
+	;;ä¿®æ­£åŸæ¥çš„é”™è¯¯ï¼Œè¿™é‡Œåªè¯»ä¸€ä¸ª.textæ®µï¼Œå¯¼è‡´.dataæˆ–.rodataçš„ä¸œè¥¿ä¼šä¸¢å¤±ï¼Œä¸ºäº†æ–¹ä¾¿æˆ‘å°±ç›´æ¥è¯»æ•´ä¸ªæ–‡ä»¶å¤§å°å§ã€‚
 	;;mov ecx, dword [es:OffsetOfKernel+eax+Offset_elf_p_filesize]
 	mov ecx, dword [ElfSize]
 
-	;; Ëã³öProgram HeaderÆ«ÒÆ,Èë¿ÚµØÖ·-HeaderĞéÄâµØÖ·
+	;; ç®—å‡ºProgram Headeråç§»,å…¥å£åœ°å€-Headerè™šæ‹Ÿåœ°å€
 	mov eax, dword [EBaseOfKernel]
 	sub eax, edx 
 	add eax, ebx
@@ -152,18 +154,18 @@ LABEL_FILENAME_FOUND:
 
 	call KillMotor
 	
-	;;¹ØÖĞ¶Ï£¬ÆôÓÃa20
+	;;å…³ä¸­æ–­ï¼Œå¯ç”¨a20
 	cli
 	in  al, 92h
   or  al, 10b
   out 92h, al
 
-	;;cr0 peÎ»ÖÃ1£¬½ø±£»¤Ä£Ê½
+	;;cr0 peä½ç½®1ï¼Œè¿›ä¿æŠ¤æ¨¡å¼
   mov  eax, cr0
   or  eax, 1
   mov  cr0, eax 
 
-	;;ÉèÖÃ±£»¤Ä£Ê½ÏÂ¼Ä´æÆ÷
+	;;è®¾ç½®ä¿æŠ¤æ¨¡å¼ä¸‹å¯„å­˜å™¨
   mov eax, SelectorFlatRW
   mov ss, eax
   mov ds, eax
@@ -175,14 +177,14 @@ LABEL_FILENAME_FOUND:
 	mov eax, SelectorVideo
 	mov gs, eax
   
-  ;;Ìøµ½kernel
+  ;;è·³åˆ°kernel
 	jmp dword SelectorFlatC:0x30400
 	
 	jmp $
 	
-;; »ñÈ¡ÏÂÒ»¸öfatÏî
-;; ax Ë÷ÒıºÅ
-;; cx ÏÂÒ»¸öÉÈÇøºÅ,0Îª×îºóÒ»¸öÉÈÇø
+;; è·å–ä¸‹ä¸€ä¸ªfaté¡¹
+;; ax ç´¢å¼•å·
+;; cx ä¸‹ä¸€ä¸ªæ‰‡åŒºå·,0ä¸ºæœ€åä¸€ä¸ªæ‰‡åŒº
 GetFatEntry:
 	push bp
 	mov  bp,sp
@@ -191,9 +193,9 @@ GetFatEntry:
 	push dx
 	push es
 	
-	;;¶ÁÈ¡fat1±íÏî 1..9
+	;;è¯»å–fat1è¡¨é¡¹ 1..9
 	mov bx, BaseOfKernel	
-	sub bx, 200h  ;; 9¸öÉÈÇøĞèÒª 4.5k¿Õ¼ä, 16*0x100 =4k,ÕâÀï·ÖÅä8k,¹»ÓÃÁË
+	sub bx, 200h  ;; 9ä¸ªæ‰‡åŒºéœ€è¦ 4.5kç©ºé—´, 16*0x100 =4k,è¿™é‡Œåˆ†é…8k,å¤Ÿç”¨äº†
 	mov es, bx
 	xor bx, bx
 	mov cl, 1
@@ -211,7 +213,7 @@ GetFatEntry:
 	mul	bx
 	mov bx, 2
 	div bx
-	;; ÅĞ¶ÏÓĞÃ»ÓĞÓà
+	;; åˆ¤æ–­æœ‰æ²¡æœ‰ä½™
 	xor bx, bx
 	add bx, ax
 	mov cx, word[es:bx]
@@ -230,9 +232,9 @@ GetFatEntry:
 	pop bp
 	ret
 
-;; ax Òª¶ÁÈ¡µÄÉÈÇøºÅ
-;; cl ¶ÁÈ¡ÉÈÇøÊıÄ¿
-;; ¶ÁÈ¡µÄÄÚÈİ·ÅÔÚ [es:bx]
+;; ax è¦è¯»å–çš„æ‰‡åŒºå·
+;; cl è¯»å–æ‰‡åŒºæ•°ç›®
+;; è¯»å–çš„å†…å®¹æ”¾åœ¨ [es:bx]
 ReadSector:
 	push	bp
 	mov  bp, sp
@@ -241,15 +243,15 @@ ReadSector:
 	push cx
 	push cx
 	push bx
-	mov  bl, 12h ;;Ã¿´ÅµÀÉÈÇøÊı
+	mov  bl, 12h ;;æ¯ç£é“æ‰‡åŒºæ•°
 	div	 bl
 	inc  ah
-	mov  cl, ah ;;ÆğÊ¼ÉÈÇøºÅ
+	mov  cl, ah ;;èµ·å§‹æ‰‡åŒºå·
 	mov  dh, al
 	shr  al, 1
-	mov  ch, al ;; ÖùÃæºÅ
-	and  dh, 1  ;; ´ÅÍ·ºÅ
-	mov  dl, 0  ;; 0±íÊ¾AÅÌ
+	mov  ch, al ;; æŸ±é¢å·
+	and  dh, 1  ;; ç£å¤´å·
+	mov  dl, 0  ;; 0è¡¨ç¤ºAç›˜
 	pop  bx
 	pop  ax
 .GoOnReading:
@@ -288,8 +290,8 @@ KillMotor:
 BaseOfStack     equ		07c00h
 BaseOfKernel	equ		08000h
 OffsetOfKernel	equ		0100h
-RootDirSectors	equ		14	;;¸ùÄ¿Â¼ËùÕ¼ÉÈÇøÊı
-SectorNoOfRootDirectory	equ	19	;;root directoryÉÈÇøºÅ
+RootDirSectors	equ		14	;;æ ¹ç›®å½•æ‰€å æ‰‡åŒºæ•°
+SectorNoOfRootDirectory	equ	19	;;root directoryæ‰‡åŒºå·
 
 wRootDirSizeForLoop	dw	RootDirSectors
 wSectorNo		dw		0

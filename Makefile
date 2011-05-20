@@ -20,8 +20,9 @@ kernel:
 	${CCOMPILE}  ${CFLAGS} -c kprintf.c
 	${CCOMPILE}  ${CFLAGS} -c monitor.c
 	${CCOMPILE}  ${CFLAGS} -c desc_idt.c
+	${CCOMPILE}  ${CFLAGS} -c msr.c
 	${ASM_COMPILE} -felf isr.asm
-	ld ${LINKFLAGS}  -s test.o kprintf.o monitor.o desc_idt.o isr.o -e main -o KERNEL.BIN -Map kernel.map
+	ld ${LINKFLAGS}  -s test.o kprintf.o monitor.o desc_idt.o isr.o msr.o -e main -o KERNEL.BIN -Map kernel.map
 #	nasm -f elf loader.asm -o loader.o
 #	gcc34 -c main.c
 #	ld -o loader -Ttext 0x100 -N -e main loader.o main.o
