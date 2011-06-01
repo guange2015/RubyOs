@@ -1,28 +1,11 @@
 extern divide_error
 extern isr
 
-global isr0
-global isr1
-global isr2
-global isr3
-global isr4
-global isr5
-global isr6
-global isr7
-global isr8
-global isr9
-global isr10
-global isr11
-global isr12
-global isr13
-global isr14
-global isr15
-global isr_default
-
 [SECTION .s32]
 [BITS 32]
 
 %macro isr_no_errorcode_define 1
+global isr%1
 isr%1:
 	cli
 	mov  ebx, [esp] ;;eip
@@ -38,6 +21,7 @@ isr%1:
 %endmacro
 
 %macro isr_define 1
+global isr%1
 isr%1:
 	cli
 	mov  eax, [esp]
@@ -71,6 +55,7 @@ isr_define 13
 isr_define 14
 isr_no_errorcode_define 15
 
+global isr_default
 isr_default:
 	cli
 	mov  ebx, [esp] ;;eip

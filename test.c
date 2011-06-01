@@ -1,6 +1,7 @@
 #include "kprintf.h"
 #include "desc_idt.h"
 #include "msr.h"
+#include "timer.h"
 
 int main()
 {
@@ -19,12 +20,12 @@ int main()
 
     init_idt();
 
-    int i = 10;
-    int j = 0;
-//    int x1 = i / j;
-	//__asm__("sysenter");
-    init_msr();
-    test_msr();
+
+    asm volatile("sti");
+    init_timer(50); 
+
+    //init_msr();
+    //test_msr();
 	while(1){
 
 	}

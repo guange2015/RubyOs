@@ -10,27 +10,6 @@ static u16int *video_memory = (u16int *)0xB8000;
 static u8int cursor_x = 0;
 static u8int cursor_y = 0;
 
-
-// Write a byte out to the specified port.
-void outb(u16int port, u8int value)
-{
-    asm volatile ("outb %1, %0" : : "dN" (port), "a" (value));
-}
-
-u8int inb(u16int port)
-{
-    u8int ret;
-    asm volatile("inb %1, %0" : "=a" (ret) : "dN" (port));
-    return ret;
-}
-
-u16int inw(u16int port)
-{
-    u16int ret;
-    asm volatile ("inw %1, %0" : "=a" (ret) : "dN" (port));
-    return ret;
-}
-
 // Updates the hardware cursor.
 static void move_cursor()
 {
